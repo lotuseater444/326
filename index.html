@@ -91,7 +91,7 @@
     position: fixed; inset: 0;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.075s ease;
+    transition: opacity 0.025s ease;
     background: var(--bg);
     overflow: hidden;
   }
@@ -503,20 +503,42 @@ class IParticle {
   constructor(x, y) {
     this.x = x; this.y = y;
     this.size = Math.random() * 2.2 + 0.5;
-    this.alpha = 1; this.live = false;
+    this.alpha = 0; this.live = false;
     // 初始速度略加大：让“变成粒子后”散开更多一点
-    this.vx = (Math.random() - 0.5) * 1.7;
-    this.vy = -(Math.random() * 4.6 + 1.9);
-    this.ax = (Math.random() - 0.5) * 0.095;
-    // 淡出更慢：降低 alpha 衰减速度
-    this.fade = 0.004 + Math.random() * 0.008;
+    this.vx = (Math.random() - 0.5) * 2.35;              // 更散：横向速度更大
+    this.vy = -(Math.random() * 6.2 + 2.6);               // 更散：向上速度更大
+    this.ax = (Math.random() - 0.5) * 0.14;               // 更散：加速度更大
+    // 更快淡出：让“空白白屏”总时长接近 1s
+    this.fade = 0.018 + Math.random() * 0.018;            // 每帧衰减更快
     this.g = Math.floor(Math.random() * 35);
   }
-  start() { this.live = true; }
+  start(fadeInFrames = 26, disperseDelayFrames = 10) {
+    this.live = true;
+    this.frame = 0;
+    this.fadeInFrames = fadeInFrames;
+    this.disperseDelayFrames = disperseDelayFrames;
+    // 粒子从很透明开始长出来，与文字淡出形成“解体”效果
+    this.alpha = 0;
+  }
   update() {
     if (!this.live) return;
-    this.vx += this.ax; this.x += this.vx; this.y += this.vy;
-    this.alpha -= this.fade; this.size *= 0.9992;
+    this.frame++;
+
+    // 先不急着散开，让粒子在“文字位置”附近逐步显现
+    const canMove = this.frame > this.disperseDelayFrames;
+    if (canMove) {
+      this.vx += this.ax; this.x += this.vx; this.y += this.vy;
+    }
+
+    // 先 fade-in，再 fade-out（从而做到“慢慢解体”）
+    if (this.frame <= this.fadeInFrames) {
+      this.alpha = Math.min(1, this.frame / this.fadeInFrames);
+    } else {
+      this.alpha = Math.max(0, this.alpha - this.fade);
+    }
+
+    // 尺寸衰减也稍微放慢，避免过早“消失点”
+    this.size *= 0.999;
   }
   draw(c) {
     if (this.alpha <= 0) return;
@@ -550,33 +572,28 @@ function triggerIntro() {
   iStarted = true;
 
   if (introEnterBtn) introEnterBtn.disabled = true;
-  introCanvas.style.opacity = '0'; // 先让文字淡出，再显示粒子
+  introCanvas.style.opacity = '1'; // 与粒子逐步显现同步
 
-  const TEXT_FADE_MS = 150;
-  const TRANSFORM_HOLD_MS = 140;
-  const SCATTER_START_DELAY_MS = TRANSFORM_HOLD_MS;
+  const TEXT_FADE_MS = 360; // 文字慢慢解体，但更快进入“粒子态”
+  const PARTICLE_FADE_IN_FRAMES = 16; // 粒子慢慢长出来（更丝滑但不拖太久）
+  const PARTICLE_DISPERSE_DELAY_FRAMES = 5; // 更早开始散开，整体更“散”
 
-  dreamEl.style.transition = `opacity ${TEXT_FADE_MS}ms`;
+  dreamEl.style.transition = `opacity ${TEXT_FADE_MS}ms cubic-bezier(0.16,1,0.3,1)`;
   // 避免 fill-mode 的 CSS animation 把 opacity 锁住
   dreamEl.style.animation = 'none';
   dreamEl.style.opacity = '0';
 
-  // 先让文字淡出；文字消失后再“变成粒子”，随后再开始散开+淡出
-  setTimeout(() => {
-    introCanvas.style.opacity = '1'; // 让粒子点阵出现
-    setTimeout(() => {
-      iParticles.forEach(p => p.start()); // 开始运动与淡出
-    }, SCATTER_START_DELAY_MS);
-  }, TEXT_FADE_MS);
+  // 文字淡出时，同时让粒子从透明逐步显现并在短延迟后开始散开
+  iParticles.forEach(p => p.start(PARTICLE_FADE_IN_FRAMES, PARTICLE_DISPERSE_DELAY_FRAMES));
 
   const poll = setInterval(() => {
     if (iParticles.every(p => p.alpha <= 0)) {
       clearInterval(poll);
       cancelAnimationFrame(iRaf);
-      introEl.style.transition = 'opacity 0.175s ease';
+      introEl.style.transition = 'opacity 0.05s ease';
       introEl.style.opacity = '0';
       showEl.classList.add('visible');
-      setTimeout(() => introEl.remove(), 180);
+      setTimeout(() => introEl.remove(), 50);
       iFinished = true;
     }
   }, 80);
