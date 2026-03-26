@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>this is my dream</title>
+<title>I had a weird dream...</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap');
 
@@ -37,6 +37,10 @@
   #intro-canvas {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
+    opacity: 0;
+    transition: opacity 0.05s ease;
+    will-change: opacity;
+    pointer-events: none;
   }
 
   #dream-text {
@@ -57,12 +61,37 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  #intro-enter {
+    position: absolute;
+    bottom: 88px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 101;
+    font-family: 'Space Mono', monospace;
+    font-size: 14.5px; /* about +30% */
+    letter-spacing: 0.22em;
+    color: #111;
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 0;
+    border-radius: 0;
+    cursor: pointer;
+    opacity: 0.95;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    user-select: none;
+    outline: none;
+  }
+  #intro-enter:hover { opacity: 1; }
+  #intro-enter:active { transform: translateX(-50%) scale(0.98); }
+  #intro-enter:disabled { opacity: 0; pointer-events: none; }
+
   /* ════ SLIDESHOW ════ */
   #slideshow {
     position: fixed; inset: 0;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.9s ease;
+    transition: opacity 0.075s ease;
     background: var(--bg);
     overflow: hidden;
   }
@@ -352,7 +381,10 @@
 <!-- ════ INTRO ════ -->
 <div id="intro">
   <canvas id="intro-canvas"></canvas>
-  <div id="dream-text">this is my dream</div>
+  <div id="dream-text">I had a weird dream...</div>
+  <button id="intro-enter" type="button" aria-label="View">
+    [ view ]
+  </button>
 </div>
 
 <!-- ════ SLIDESHOW ════ -->
@@ -361,29 +393,29 @@
   <div id="slides-strip">
 
     <!-- slides 1–8：本地漫画页（与 relase 目录下 JPEG 同序） -->
-    <div class="slide" data-i="0" data-asset="1.JPEG">
-      <img class="slide-bg" src="1封面.JPEG" alt="漫画第 1 页" decoding="async" fetchpriority="high">
+    <div class="slide" data-i="0" data-asset="1">
+      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E1%3C/text%3E%3C/svg%3E" alt="Frame 1" decoding="async" fetchpriority="high">
     </div>
-    <div class="slide" data-i="1" data-asset="1封面.JPEG">
-      <img class="slide-bg" src="in.JPEG" alt="封面" decoding="async">
+    <div class="slide" data-i="1" data-asset="2">
+      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E2%3C/text%3E%3C/svg%3E" alt="Frame 2" decoding="async">
     </div>
-    <div class="slide" data-i="2" data-asset="2 4.JPEG">
-      <img class="slide-bg" src="2%204.JPEG" alt="漫画第 3 页" decoding="async">
+    <div class="slide" data-i="2" data-asset="3">
+      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E3%3C/text%3E%3C/svg%3E" alt="Frame 3" decoding="async">
     </div>
-    <div class="slide" data-i="3" data-asset="3.JPEG">
-      <img class="slide-bg" src="3.JPEG" alt="漫画第 4 页" decoding="async">
+    <div class="slide" data-i="3" data-asset="4">
+      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E4%3C/text%3E%3C/svg%3E" alt="Frame 4" decoding="async">
     </div>
-    <div class="slide" data-i="4" data-asset="4.JPEG">
-      <img class="slide-bg" src="4.JPEG" alt="漫画第 5 页" decoding="async">
+    <div class="slide" data-i="4" data-asset="5">
+      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E5%3C/text%3E%3C/svg%3E" alt="Frame 5" decoding="async">
     </div>
-    <div class="slide" data-i="5" data-asset="5.JPEG">
-      <img class="slide-bg" src="5.JPEG" alt="漫画第 6 页" decoding="async">
+    <div class="slide" data-i="5" data-asset="6">
+      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E6%3C/text%3E%3C/svg%3E" alt="Frame 6" decoding="async">
     </div>
-    <div class="slide" data-i="6" data-asset="6.JPEG">
-      <img class="slide-bg" src="6.JPEG" alt="漫画第 7 页" decoding="async">
+    <div class="slide" data-i="6" data-asset="7">
+      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E7%3C/text%3E%3C/svg%3E" alt="Frame 7" decoding="async">
     </div>
-    <div class="slide" data-i="7" data-asset="in.JPEG">
-      <img class="slide-bg" src="in.JPEG" alt="漫画第 8 页" decoding="async">
+    <div class="slide" data-i="7" data-asset="8">
+      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E8%3C/text%3E%3C/svg%3E" alt="Frame 8" decoding="async">
     </div>
 
     <!-- slide 9: dream wall -->
@@ -408,7 +440,7 @@
 
   </div><!-- /slides-strip -->
 
-  <div id="chrome-top"><span>this is my dream</span></div>
+  <div id="chrome-top"><span>I had a weird dream...</span></div>
   <div id="swipe-hint">swipe to explore</div>
 
   <div id="chrome-bottom">
@@ -435,13 +467,11 @@ const ictx        = introCanvas.getContext('2d');
 const dreamEl     = document.getElementById('dream-text');
 const introEl     = document.getElementById('intro');
 const showEl      = document.getElementById('slideshow');
+const introEnterBtn = document.getElementById('intro-enter');
 
 let IW, IH, iParticles = [], iRaf;
-const INTRO_HOLD_MS = 500;    // 停留 2s：文字保持显示，粒子点阵不出现
-const INTRO_DISPERSE_MS = 800; // 粒子“消散”持续时长（并与文字淡出同步）
-let iLastT = 0;
-let iExited = false;
-let iDispersing = false;
+let iStarted = false;
+let iFinished = false;
 
 function iResize() {
   IW = introCanvas.width  = window.innerWidth;
@@ -473,32 +503,20 @@ class IParticle {
   constructor(x, y) {
     this.x = x; this.y = y;
     this.size = Math.random() * 2.2 + 0.5;
-    // 初始不显示粒子点阵；等到开始“消散”时再 start() 点亮
-    this.alpha = 0; this.live = false;
-    this.vx = (Math.random() - 0.5) * 1.4;
-    this.vy = -(Math.random() * 4 + 1.5);
-    this.ax = (Math.random() - 0.5) * 0.07;
-    this.ageMs = 0;
-    this.lifeMs = INTRO_DISPERSE_MS; // 统一寿命，确保淡出更丝滑且可与文字同步
+    this.alpha = 1; this.live = false;
+    // 初始速度略加大：让“变成粒子后”散开更多一点
+    this.vx = (Math.random() - 0.5) * 1.7;
+    this.vy = -(Math.random() * 4.6 + 1.9);
+    this.ax = (Math.random() - 0.5) * 0.095;
+    // 淡出更慢：降低 alpha 衰减速度
+    this.fade = 0.004 + Math.random() * 0.008;
     this.g = Math.floor(Math.random() * 35);
   }
-  start() {
-    this.live = true;
-    this.ageMs = 0;
-    this.alpha = 1;
-  }
-  update(dt) {
+  start() { this.live = true; }
+  update() {
     if (!this.live) return;
-    const f = dt / 16.6667; // 以 60fps 为基准缩放，保证不同刷新率下观感一致
-    this.ageMs += dt;
-
-    // 线性衰减：寿命到期时 alpha 精确归零
-    this.alpha = Math.max(0, 1 - this.ageMs / this.lifeMs);
-
-    this.vx += this.ax * f;
-    this.x += this.vx * f;
-    this.y += this.vy * f;
-    this.size *= Math.pow(0.998, f);
+    this.vx += this.ax; this.x += this.vx; this.y += this.vy;
+    this.alpha -= this.fade; this.size *= 0.9992;
   }
   draw(c) {
     if (this.alpha <= 0) return;
@@ -509,51 +527,68 @@ class IParticle {
   }
 }
 
-function iLoop(now) {
-  if (!iLastT) iLastT = now;
-  const dt = Math.min(48, Math.max(0, now - iLastT));
-  iLastT = now;
+function iLoop() {
   ictx.clearRect(0, 0, IW, IH);
-  let allDead = true;
-  iParticles.forEach(p => {
-    p.update(dt);
-    p.draw(ictx);
-    if (p.alpha > 0) allDead = false;
-  });
-
-  // 粒子消散完后立刻进入退出动画，避免 setInterval 轮询带来的停顿
-  if (iDispersing && allDead && !iExited) {
-    iExited = true;
-    introEl.style.transition = 'opacity 0.7s ease';
-    introEl.style.opacity = '0';
-    showEl.classList.add('visible');
-    setTimeout(() => introEl.remove(), 800);
-    return;
-  }
-
+  iParticles.forEach(p => { p.update(); p.draw(ictx); });
   iRaf = requestAnimationFrame(iLoop);
 }
 
 function startIntro() {
-  iParticles = sampleText('this is my dream').map(p => new IParticle(p.x, p.y));
-  iLastT = 0;
-  iExited = false;
-  iDispersing = false;
-  iLoop(performance.now());
+  iParticles = sampleText('I had a weird dream...').map(p => new IParticle(p.x, p.y));
+  iStarted = false;
+  iFinished = false;
 
-  setTimeout(() => {
-    iDispersing = true;
-
-    // #dream-text 有 CSS animation（fill-mode: both）会“锁住 opacity”，所以要先关掉动画再淡出
-    dreamEl.style.animation = 'none';
-    dreamEl.style.transition = `opacity ${INTRO_DISPERSE_MS}ms cubic-bezier(0.16,1,0.3,1)`;
-    dreamEl.style.opacity = '0';
-
-    iParticles.forEach(p => p.start());
-  }, INTRO_HOLD_MS);
+  // 默认只显示文字，点击后才把粒子画出来并开始运动
+  introCanvas.style.opacity = '0';
+  iLoop();
 }
 
-// 不依赖字体加载完成：避免“看起来像需要点击/激活才开始”
+function triggerIntro() {
+  if (iStarted || iFinished) return;
+  if (showEl.classList.contains('visible')) return;
+  if (!iParticles || iParticles.length === 0) return;
+  iStarted = true;
+
+  if (introEnterBtn) introEnterBtn.disabled = true;
+  introCanvas.style.opacity = '0'; // 先让文字淡出，再显示粒子
+
+  const TEXT_FADE_MS = 150;
+  const TRANSFORM_HOLD_MS = 140;
+  const SCATTER_START_DELAY_MS = TRANSFORM_HOLD_MS;
+
+  dreamEl.style.transition = `opacity ${TEXT_FADE_MS}ms`;
+  // 避免 fill-mode 的 CSS animation 把 opacity 锁住
+  dreamEl.style.animation = 'none';
+  dreamEl.style.opacity = '0';
+
+  // 先让文字淡出；文字消失后再“变成粒子”，随后再开始散开+淡出
+  setTimeout(() => {
+    introCanvas.style.opacity = '1'; // 让粒子点阵出现
+    setTimeout(() => {
+      iParticles.forEach(p => p.start()); // 开始运动与淡出
+    }, SCATTER_START_DELAY_MS);
+  }, TEXT_FADE_MS);
+
+  const poll = setInterval(() => {
+    if (iParticles.every(p => p.alpha <= 0)) {
+      clearInterval(poll);
+      cancelAnimationFrame(iRaf);
+      introEl.style.transition = 'opacity 0.175s ease';
+      introEl.style.opacity = '0';
+      showEl.classList.add('visible');
+      setTimeout(() => introEl.remove(), 180);
+      iFinished = true;
+    }
+  }, 80);
+}
+
+if (introEnterBtn) {
+  introEnterBtn.addEventListener('click', triggerIntro);
+}
+window.addEventListener('keydown', e => {
+  if (e.key === 'Enter') triggerIntro();
+});
+
 setTimeout(startIntro, 250);
 
 
@@ -593,6 +628,16 @@ function updateUI() {
   btnPrev.disabled = cur === 0;
   btnNext.disabled = cur === N - 1;
   document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+
+  // 第二帧（第2页）把前进/后退按钮做得更深更显眼
+  const isFrame2 = cur === 1;
+  btnPrev.style.background = (isFrame2 && !btnPrev.disabled) ? 'rgba(0,0,0,0.06)' : 'none';
+  btnNext.style.background = (isFrame2 && !btnNext.disabled) ? 'rgba(0,0,0,0.06)' : 'none';
+  if (!btnPrev.disabled) btnPrev.style.opacity = isFrame2 ? '0.9' : '0.5';
+  if (!btnNext.disabled) btnNext.style.opacity = isFrame2 ? '0.9' : '0.5';
+  if (btnPrev.disabled) btnPrev.style.opacity = '';
+  if (btnNext.disabled) btnNext.style.opacity = '';
+
   // when wall is visible, allow input interaction
   document.getElementById('wall-slide-wrapper').style.pointerEvents =
     cur === N - 1 ? 'all' : 'none';
