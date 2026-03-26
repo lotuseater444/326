@@ -437,6 +437,11 @@ const introEl     = document.getElementById('intro');
 const showEl      = document.getElementById('slideshow');
 
 let IW, IH, iParticles = [], iRaf;
+const INTRO_HOLD_MS = 500;    // 停留 2s：文字保持显示，粒子点阵不出现
+const INTRO_DISPERSE_MS = 800; // 粒子“消散”持续时长（并与文字淡出同步）
+let iLastT = 0;
+let iExited = false;
+let iDispersing = false;
 
 function iResize() {
   IW = introCanvas.width  = window.innerWidth;
@@ -468,18 +473,32 @@ class IParticle {
   constructor(x, y) {
     this.x = x; this.y = y;
     this.size = Math.random() * 2.2 + 0.5;
-    this.alpha = 1; this.live = false;
+    // 初始不显示粒子点阵；等到开始“消散”时再 start() 点亮
+    this.alpha = 0; this.live = false;
     this.vx = (Math.random() - 0.5) * 1.4;
     this.vy = -(Math.random() * 4 + 1.5);
     this.ax = (Math.random() - 0.5) * 0.07;
-    this.fade = 0.007 + Math.random() * 0.013;
+    this.ageMs = 0;
+    this.lifeMs = INTRO_DISPERSE_MS; // 统一寿命，确保淡出更丝滑且可与文字同步
     this.g = Math.floor(Math.random() * 35);
   }
-  start() { this.live = true; }
-  update() {
+  start() {
+    this.live = true;
+    this.ageMs = 0;
+    this.alpha = 1;
+  }
+  update(dt) {
     if (!this.live) return;
-    this.vx += this.ax; this.x += this.vx; this.y += this.vy;
-    this.alpha -= this.fade; this.size *= 0.998;
+    const f = dt / 16.6667; // 以 60fps 为基准缩放，保证不同刷新率下观感一致
+    this.ageMs += dt;
+
+    // 线性衰减：寿命到期时 alpha 精确归零
+    this.alpha = Math.max(0, 1 - this.ageMs / this.lifeMs);
+
+    this.vx += this.ax * f;
+    this.x += this.vx * f;
+    this.y += this.vy * f;
+    this.size *= Math.pow(0.998, f);
   }
   draw(c) {
     if (this.alpha <= 0) return;
@@ -490,33 +509,52 @@ class IParticle {
   }
 }
 
-function iLoop() {
+function iLoop(now) {
+  if (!iLastT) iLastT = now;
+  const dt = Math.min(48, Math.max(0, now - iLastT));
+  iLastT = now;
   ictx.clearRect(0, 0, IW, IH);
-  iParticles.forEach(p => { p.update(); p.draw(ictx); });
+  let allDead = true;
+  iParticles.forEach(p => {
+    p.update(dt);
+    p.draw(ictx);
+    if (p.alpha > 0) allDead = false;
+  });
+
+  // 粒子消散完后立刻进入退出动画，避免 setInterval 轮询带来的停顿
+  if (iDispersing && allDead && !iExited) {
+    iExited = true;
+    introEl.style.transition = 'opacity 0.7s ease';
+    introEl.style.opacity = '0';
+    showEl.classList.add('visible');
+    setTimeout(() => introEl.remove(), 800);
+    return;
+  }
+
   iRaf = requestAnimationFrame(iLoop);
 }
 
 function startIntro() {
   iParticles = sampleText('this is my dream').map(p => new IParticle(p.x, p.y));
-  iLoop();
+  iLastT = 0;
+  iExited = false;
+  iDispersing = false;
+  iLoop(performance.now());
+
   setTimeout(() => {
-    dreamEl.style.transition = 'opacity 0.15s';
+    iDispersing = true;
+
+    // #dream-text 有 CSS animation（fill-mode: both）会“锁住 opacity”，所以要先关掉动画再淡出
+    dreamEl.style.animation = 'none';
+    dreamEl.style.transition = `opacity ${INTRO_DISPERSE_MS}ms cubic-bezier(0.16,1,0.3,1)`;
     dreamEl.style.opacity = '0';
+
     iParticles.forEach(p => p.start());
-    const poll = setInterval(() => {
-      if (iParticles.every(p => p.alpha <= 0)) {
-        clearInterval(poll);
-        cancelAnimationFrame(iRaf);
-        introEl.style.transition = 'opacity 0.7s ease';
-        introEl.style.opacity = '0';
-        showEl.classList.add('visible');
-        setTimeout(() => introEl.remove(), 800);
-      }
-    }, 80);
-  }, 2000);
+  }, INTRO_HOLD_MS);
 }
 
-document.fonts.ready.then(() => setTimeout(startIntro, 250));
+// 不依赖字体加载完成：避免“看起来像需要点击/激活才开始”
+setTimeout(startIntro, 250);
 
 
 /* ══════════════════════════════════════
