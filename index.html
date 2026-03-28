@@ -798,6 +798,38 @@ const wallCount   = document.getElementById('wall-count');
 
 let WW, WH, wRaf, wMessages = [], wallReady = false;
 
+/** Word-wrap for canvas measureText — keeps dreams readable on narrow screens. */
+function wrapWallLines(ctx, text, maxW) {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return [''];
+  const lines = [];
+  let line = '';
+  for (const w of words) {
+    const next = line ? `${line} ${w}` : w;
+    if (ctx.measureText(next).width <= maxW) {
+      line = next;
+    } else {
+      if (line) lines.push(line);
+      if (ctx.measureText(w).width <= maxW) {
+        line = w;
+      } else {
+        let acc = '';
+        for (let i = 0; i < w.length; i++) {
+          const t = acc + w[i];
+          if (ctx.measureText(t).width <= maxW) acc = t;
+          else {
+            if (acc) lines.push(acc);
+            acc = w[i];
+          }
+        }
+        line = acc;
+      }
+    }
+  }
+  if (line) lines.push(line);
+  return lines.length ? lines : [text];
+}
+
 // Floating message objects for canvas
 class FloatingMsg {
   /**
@@ -836,7 +868,8 @@ class FloatingMsg {
     this.baseAlpha = 0.08 + r() * 0.28;
     this.alpha = 0;
     this.targetAlpha = this.baseAlpha;
-    this.size = 13 + r() * 6;
+    // Slightly larger type on narrow viewports so wrapped lines stay legible
+    this.size = w < 480 ? 14 + r() * 4 : 13 + r() * 6;
     this.angle = (r() - 0.5) * 0.12;
     this.born = Date.now() + r() * 6000; // stagger appearance
     this.appeared = false;
@@ -857,20 +890,30 @@ class FloatingMsg {
     // wrap around edges
     if (this.x < -200) this.x = WW + 100;
     if (this.x > WW + 200) this.x = -100;
-    if (this.y < -40) this.y = WH + 20;
-    if (this.y > WH + 40) this.y = -20;
+    if (this.y < -120) this.y = WH + 40;
+    if (this.y > WH + 120) this.y = -40;
   }
 
   draw(c) {
     if (this.alpha < 0.005) return;
+    const font = `italic 400 ${this.size}px 'Gill Sans', 'Gill Sans MT', Calibri, sans-serif`;
     c.save();
+    c.font = font;
+    const maxW = Math.max(140, Math.min(Math.max(WW, 1) * 0.82, 360));
+    const lines = wrapWallLines(c, this.text, maxW);
+    const lineHeight = this.size * 1.38;
+    const totalH = lines.length * lineHeight;
+
     c.globalAlpha = this.alpha;
     c.translate(this.x, this.y);
     c.rotate(this.angle);
-    c.font = `italic 400 ${this.size}px 'Gill Sans', 'Gill Sans MT', Calibri, sans-serif`;
     c.fillStyle = '#111';
     c.textAlign = 'center';
-    c.fillText(this.text, 0, 0);
+    c.textBaseline = 'middle';
+    const y0 = lines.length === 1 ? 0 : -(totalH - lineHeight) / 2;
+    lines.forEach((ln, i) => {
+      c.fillText(ln, 0, y0 + i * lineHeight);
+    });
     c.restore();
   }
 }
