@@ -524,10 +524,16 @@
     font-family: 'Space Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.2em;
-    color: #ccc;
+    color: #aaa;
     white-space: nowrap;
     z-index: 5;
     pointer-events: none;
+  }
+
+  #wall-count .wall-count-num {
+    color: #FF3D5A;
+    font-weight: 700;
+    letter-spacing: 0.12em;
   }
 
   @supports (padding-bottom: env(safe-area-inset-bottom)) {
@@ -1093,13 +1099,22 @@ function wLoop() {
   wRaf = requestAnimationFrame(wLoop);
 }
 
+function setWallCountDisplay(n) {
+  if (!wallCount) return;
+  if (n <= 0) {
+    wallCount.textContent = '';
+    return;
+  }
+  const word = n > 1 ? 'dreams' : 'dream';
+  wallCount.innerHTML =
+    `<span class="wall-count-num">${n}</span> ${word} shared`;
+}
+
 function buildFloaters(msgs) {
   const n = msgs.length;
   wMessages = msgs.map((text, i) =>
     new FloatingMsg(text, strToSeed(text + i), { index: i, total: n }));
-  wallCount.textContent = msgs.length > 0
-    ? `${msgs.length} dream${msgs.length > 1 ? 's' : ''} shared`
-    : '';
+  setWallCountDisplay(msgs.length);
 }
 
 // ── Storage via window.storage (Artifact persistent KV) ──
@@ -1167,7 +1182,7 @@ async function submitDream() {
   const newMsg = new FloatingMsg(text, strToSeed(text + allMessages.length));
   newMsg.born = Date.now() + 300;
   wMessages.push(newMsg);
-  wallCount.textContent = `${allMessages.length} dream${allMessages.length > 1 ? 's' : ''} shared`;
+  setWallCountDisplay(allMessages.length);
 
   wallInput.value = '';
   wallStatus.textContent = 'released ✦';
