@@ -160,13 +160,59 @@
     will-change: opacity;
   }
 
+  /* Center images in the slide box (wall uses its own layout) */
+  .slide:not(#wall-slide-wrapper) {
+    display: block;
+  }
+
   .slide-bg {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
+    background: transparent;
+    display: block;
     object-fit: contain;
     object-position: center;
-    background: var(--bg);
-    display: block;
+    margin: 0;
+  }
+
+  /* Enlarged, very blurred copy of the same frame fills letterboxing */
+  .slide:not(#wall-slide-wrapper) .slide-backdrop {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%) scale(1.42);
+    object-fit: cover;
+    object-position: center;
+    /* Muted vs sharp foreground — frosted “glass behind the pane” */
+    filter: blur(52px) saturate(0.52) brightness(1.08) contrast(0.93);
+    opacity: 0.88;
+    z-index: 0;
+    pointer-events: none;
+    margin: 0;
+  }
+
+  .slide:not(#wall-slide-wrapper) .slide-bg {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: 1;
+  }
+
+  /* Soft fade into page bg at left/right (not on dream wall) */
+  .slide:not(#wall-slide-wrapper)::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, var(--bg) 0%, transparent min(22vw, 180px)),
+      linear-gradient(to left, var(--bg) 0%, transparent min(22vw, 180px));
   }
 
   .slide-placeholder {
@@ -193,49 +239,28 @@
     text-transform: uppercase;
   }
 
-  .slide::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.06) 100%);
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  /* ── Chrome ── */
-  #chrome-top {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 60px;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 50;
-    pointer-events: none;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.85) 0%, transparent 100%);
-  }
-
-  #chrome-top span {
-    font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-    font-style: italic;
-    font-size: 11px;
-    letter-spacing: 0.22em;
-    color: #777;
-  }
-
+  /* ── Bottom chrome (no gradient fade) ── */
   #chrome-bottom {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 80px;
+    height: 72px;
     display: flex; align-items: center; justify-content: center;
     padding: 0 20px;
     z-index: 50;
-    background: linear-gradient(to top, rgba(255,255,255,0.9) 0%, transparent 100%);
+    background: transparent;
+    pointer-events: none;
+  }
+
+  #chrome-bottom .nav-btn {
+    pointer-events: auto;
   }
 
   .nav-btn {
     background: none; border: none; cursor: pointer;
     width: 72px; height: 72px;
     display: flex; align-items: center; justify-content: center;
-    color: #333;
-    opacity: 0.5;
+    color: #1a1a1a;
+    opacity: 0.82;
     transition: opacity 0.2s, transform 0.12s;
     -webkit-tap-highlight-color: transparent;
     border-radius: 50%;
@@ -243,45 +268,20 @@
     top: 50%;
     transform: translateY(-50%);
     z-index: 60;
+    outline: none;
   }
   .nav-btn:hover { opacity: 1; background: rgba(0,0,0,0.04); }
-  .nav-btn:active { transform: translateY(-50%) scale(0.9); }
+  .nav-btn:active:not(:disabled) {
+    transform: translateY(-50%) scale(0.96);
+  }
   .nav-btn:disabled { opacity: 0.12; pointer-events: none; }
   .nav-btn svg { width: 34px; height: 34px; stroke-width: 1.9; }
   #btn-prev { left: 14px; }
   #btn-next { right: 14px; }
 
-  #counter-wrap {
-    display: flex; flex-direction: column; align-items: center; gap: 9px;
-  }
-
-  #slide-counter {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.22em;
-    color: #999;
-  }
-
-  #dots {
-    display: flex; gap: 5px; align-items: center;
-  }
-
-  .dot {
-    width: 4px; height: 4px;
-    border-radius: 50%;
-    background: #ccc;
-    transition: background 0.3s, transform 0.3s;
-    cursor: pointer;
-  }
-
-  .dot.active {
-    background: #222;
-    transform: scale(1.5);
-  }
-
   #swipe-hint {
     position: fixed;
-    bottom: 88px; left: 50%; transform: translateX(-50%);
+    bottom: 80px; left: 50%; transform: translateX(-50%);
     font-family: 'Space Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.24em;
@@ -300,7 +300,7 @@
     100% { opacity: 0; }
   }
 
-  /* ════ DREAM WALL — slide 9 ════ */
+  /* ════ DREAM WALL — final slide ════ */
   #wall-slide {
     position: absolute; inset: 0;
     background: #fff;
@@ -413,7 +413,7 @@
 
   #wall-count {
     position: absolute;
-    bottom: 90px; left: 50%; transform: translateX(-50%);
+    bottom: 88px; left: 50%; transform: translateX(-50%);
     font-family: 'Space Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.2em;
@@ -426,7 +426,7 @@
   @supports (padding-bottom: env(safe-area-inset-bottom)) {
     #chrome-bottom {
       padding-bottom: max(env(safe-area-inset-bottom), 0px);
-      height: calc(80px + env(safe-area-inset-bottom));
+      height: calc(72px + env(safe-area-inset-bottom));
     }
   }
 </style>
@@ -447,34 +447,38 @@
 
   <div id="slides-strip">
 
-    <!-- slides 1–8：本地漫画页（与 relase 目录下 JPEG 同序） -->
-    <div class="slide" data-i="0" data-asset="1">
-      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E1%3C/text%3E%3C/svg%3E" alt="Frame 1" decoding="async" fetchpriority="high">
+    <!-- slides 1–7： dream comic frames -->
+    <div class="slide" data-i="0" data-asset="slide-1.png">
+      <img class="slide-backdrop" src="slide-1.png" alt="" aria-hidden="true" decoding="async">
+      <img class="slide-bg" src="slide-1.png" alt="Dream collage — babysitting" decoding="async" fetchpriority="high">
     </div>
-    <div class="slide" data-i="1" data-asset="2">
-      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E2%3C/text%3E%3C/svg%3E" alt="Frame 2" decoding="async">
+    <div class="slide" data-i="1" data-asset="slide-2.png">
+      <img class="slide-backdrop" src="slide-2.png" alt="" aria-hidden="true" decoding="async">
+      <img class="slide-bg" src="slide-2.png" alt="Dream collage — phone and baby" decoding="async">
     </div>
-    <div class="slide" data-i="2" data-asset="3">
-      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E3%3C/text%3E%3C/svg%3E" alt="Frame 3" decoding="async">
+    <div class="slide" data-i="2" data-asset="slide-3.png">
+      <img class="slide-backdrop" src="slide-3.png" alt="" aria-hidden="true" decoding="async">
+      <img class="slide-bg" src="slide-3.png" alt="Dream collage — fireplace, wand, and creature" decoding="async">
     </div>
-    <div class="slide" data-i="3" data-asset="4">
-      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E4%3C/text%3E%3C/svg%3E" alt="Frame 4" decoding="async">
+    <div class="slide" data-i="3" data-asset="slide-4.png">
+      <img class="slide-backdrop" src="slide-4.png" alt="" aria-hidden="true" decoding="async">
+      <img class="slide-bg" src="slide-4.png" alt="Dream collage — fire, purple creature, blue cube, screaming figure" decoding="async">
     </div>
-    <div class="slide" data-i="4" data-asset="5">
-      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E5%3C/text%3E%3C/svg%3E" alt="Frame 5" decoding="async">
+    <div class="slide" data-i="4" data-asset="slide-5.png">
+      <img class="slide-backdrop" src="slide-5.png" alt="" aria-hidden="true" decoding="async">
+      <img class="slide-bg" src="slide-5.png" alt="Dream collage — burnt baby, text, and fire" decoding="async">
     </div>
-    <div class="slide" data-i="5" data-asset="6">
-      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E6%3C/text%3E%3C/svg%3E" alt="Frame 6" decoding="async">
+    <div class="slide" data-i="5" data-asset="slide-6.png">
+      <img class="slide-backdrop" src="slide-6.png" alt="" aria-hidden="true" decoding="async">
+      <img class="slide-bg" src="slide-6.png" alt="Dream collage — figure, eyes in blue beam, fix the baby text" decoding="async">
     </div>
-    <div class="slide" data-i="6" data-asset="7">
-      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E7%3C/text%3E%3C/svg%3E" alt="Frame 7" decoding="async">
-    </div>
-    <div class="slide" data-i="7" data-asset="8">
-      <img class="slide-bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'1200'%20height%3D'800'%20viewBox%3D'0%200%201200%20800'%3E%3Crect%20width%3D'1200'%20height%3D'800'%20fill%3D'%23f5f5f5'/%3E%3Ctext%20x%3D'50%25'%20y%3D'52%25'%20font-family%3D'Arial'%20font-size%3D'280'%20fill%3D'%23999'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E8%3C/text%3E%3C/svg%3E" alt="Frame 8" decoding="async">
+    <div class="slide" data-i="6" data-asset="slide-7.png">
+      <img class="slide-backdrop" src="slide-7.png" alt="" aria-hidden="true" decoding="async">
+      <img class="slide-bg" src="slide-7.png" alt="Illustration — waking up, What the…!?" decoding="async">
     </div>
 
-    <!-- slide 9: dream wall -->
-    <div class="slide" data-i="8" id="wall-slide-wrapper">
+    <!-- dream wall -->
+    <div class="slide" data-i="7" id="wall-slide-wrapper">
       <div id="wall-slide">
         <canvas id="wall-canvas"></canvas>
 
@@ -495,17 +499,12 @@
 
   </div><!-- /slides-strip -->
 
-  <div id="chrome-top"><span>I had a weird dream...</span></div>
   <div id="swipe-hint">swipe to explore</div>
 
   <div id="chrome-bottom">
     <button class="nav-btn" id="btn-prev" disabled aria-label="Previous">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div id="counter-wrap">
-      <div id="dots"></div>
-      <span id="slide-counter">01 / 09</span>
-    </div>
     <button class="nav-btn" id="btn-next" aria-label="Next">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
@@ -677,20 +676,11 @@ const slides   = Array.from(document.querySelectorAll('.slide'));
 const N        = slides.length;
 const btnPrev  = document.getElementById('btn-prev');
 const btnNext  = document.getElementById('btn-next');
-const counter  = document.getElementById('slide-counter');
-const dotsWrap = document.getElementById('dots');
 
 let cur = 0, busy = false;
 /** Slow crossfade between slides (dreamlike dissolve, not a film cut). */
 const SLIDE_CROSSFADE_MS = 900;
 const SLIDE_EASE = 'cubic-bezier(0.35, 0.02, 0.25, 1)';
-
-slides.forEach((_, i) => {
-  const d = document.createElement('div');
-  d.className = 'dot' + (i === 0 ? ' active' : '');
-  d.addEventListener('click', () => goTo(i));
-  dotsWrap.appendChild(d);
-});
 
 function initSlideStack() {
   slides.forEach((el, i) => {
@@ -704,17 +694,15 @@ function initSlideStack() {
 initSlideStack();
 
 function updateUI() {
-  counter.textContent = `${String(cur + 1).padStart(2,'0')} / ${String(N).padStart(2,'0')}`;
   btnPrev.disabled = cur === 0;
   btnNext.disabled = cur === N - 1;
-  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
 
   // 第二帧（第2页）把前进/后退按钮做得更深更显眼
   const isFrame2 = cur === 1;
   btnPrev.style.background = (isFrame2 && !btnPrev.disabled) ? 'rgba(0,0,0,0.06)' : 'none';
   btnNext.style.background = (isFrame2 && !btnNext.disabled) ? 'rgba(0,0,0,0.06)' : 'none';
-  if (!btnPrev.disabled) btnPrev.style.opacity = isFrame2 ? '0.9' : '0.5';
-  if (!btnNext.disabled) btnNext.style.opacity = isFrame2 ? '0.9' : '0.5';
+  if (!btnPrev.disabled) btnPrev.style.opacity = isFrame2 ? '1' : '';
+  if (!btnNext.disabled) btnNext.style.opacity = isFrame2 ? '1' : '';
   if (btnPrev.disabled) btnPrev.style.opacity = '';
   if (btnNext.disabled) btnNext.style.opacity = '';
 
