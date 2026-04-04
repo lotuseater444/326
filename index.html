@@ -550,8 +550,17 @@
       top: auto;
       bottom: max(6px, calc(2px + env(safe-area-inset-bottom, 0px)));
       transform: none;
+      border-radius: 0;
+      background: transparent !important;
+      box-shadow: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .nav-btn:hover {
+      background: transparent !important;
     }
     .nav-btn:active:not(:disabled) {
+      background: transparent !important;
       transform: scale(0.96);
     }
     #swipe-hint {
@@ -822,6 +831,7 @@ const N           = slides.length;
 const btnPrev     = document.getElementById('btn-prev');
 const btnNext     = document.getElementById('btn-next');
 const slidesStrip = document.getElementById('slides-strip');
+const mqNavMobile = window.matchMedia('(max-width: 640px)');
 
 let cur = 0, busy = false;
 /** Simultaneous crossfade: outgoing 1→0, incoming 0→1; no motion on .slide. */
@@ -848,10 +858,15 @@ function updateUI() {
   btnPrev.disabled = cur === 0;
   btnNext.disabled = cur === N - 1;
 
-  // 第二帧（第2页）把前进/后退按钮做得更深更显眼
+  // 第二帧（第2页）把前进/后退按钮做得更深更显眼 — 略过手机，避免圆形底衬重绘卡顿
   const isFrame2 = cur === 1;
-  btnPrev.style.background = (isFrame2 && !btnPrev.disabled) ? 'rgba(0,0,0,0.06)' : 'none';
-  btnNext.style.background = (isFrame2 && !btnNext.disabled) ? 'rgba(0,0,0,0.06)' : 'none';
+  if (mqNavMobile.matches) {
+    btnPrev.style.background = '';
+    btnNext.style.background = '';
+  } else {
+    btnPrev.style.background = (isFrame2 && !btnPrev.disabled) ? 'rgba(0,0,0,0.06)' : 'none';
+    btnNext.style.background = (isFrame2 && !btnNext.disabled) ? 'rgba(0,0,0,0.06)' : 'none';
+  }
   if (!btnPrev.disabled) btnPrev.style.opacity = isFrame2 ? '1' : '';
   if (!btnNext.disabled) btnNext.style.opacity = isFrame2 ? '1' : '';
   if (btnPrev.disabled) btnPrev.style.opacity = '';
