@@ -25,11 +25,6 @@
     user-select: none;
   }
 
-  @keyframes intro-landing-fade {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
   /* ════ INTRO ════ */
   #intro {
     position: fixed; inset: 0;
@@ -37,7 +32,6 @@
     background: var(--bg);
     z-index: 100;
     overflow: hidden;
-    animation: intro-landing-fade 1.8s ease-in forwards;
   }
 
   #intro-canvas {
@@ -138,19 +132,13 @@
   #intro-enter:active { transform: translateX(-50%) scale(0.98); }
   #intro-enter:disabled { opacity: 0; pointer-events: none; }
 
-  @media (prefers-reduced-motion: reduce) {
-    #intro {
-      animation: none;
-      opacity: 1;
-    }
-  }
-
   /* ════ SLIDESHOW ════ */
   #slideshow {
     position: fixed; inset: 0;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.025s ease;
+    /* Snappy handoff from intro (particles → first slide) */
+    transition: opacity 0.05s ease-out;
     background: var(--bg);
     overflow: hidden;
   }
@@ -158,6 +146,12 @@
   #slideshow.visible {
     opacity: 1;
     pointer-events: all;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #slideshow {
+      transition-duration: 0.03s;
+    }
   }
 
   #slides-strip {
@@ -289,6 +283,13 @@
     #wall-slide {
       max-width: 100%;
       overflow-x: hidden;
+      padding-bottom: max(80px, calc(64px + env(safe-area-inset-bottom, 0px)));
+    }
+
+    /* No side vignette — show full frame edge to edge */
+    .slide:not(#wall-slide-wrapper)::before {
+      content: none;
+      display: none;
     }
   }
 
@@ -506,6 +507,36 @@
       height: calc(72px + env(safe-area-inset-bottom));
     }
   }
+
+  /* After base .nav-btn — mobile only: bottom arrows + hint/count clear of thumbs */
+  @media (max-width: 640px) {
+    .nav-btn {
+      top: auto;
+      bottom: max(10px, calc(8px + env(safe-area-inset-bottom, 0px)));
+      transform: none;
+    }
+    .nav-btn:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+    #swipe-hint {
+      bottom: max(100px, calc(88px + env(safe-area-inset-bottom, 0px)));
+    }
+    #wall-count {
+      bottom: max(152px, calc(140px + env(safe-area-inset-bottom, 0px)));
+    }
+
+    /* Same left/right softening as desktop, only while slides are crossfading */
+    #slides-strip.slide-crossfading::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 25;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, var(--bg) 0%, transparent min(22vw, 180px)),
+        linear-gradient(to left, var(--bg) 0%, transparent min(22vw, 180px));
+    }
+  }
 </style>
 </head>
 <body>
@@ -599,10 +630,12 @@ const dreamEl     = document.getElementById('dream-text');
 const introEl     = document.getElementById('intro');
 const showEl      = document.getElementById('slideshow');
 const introEnterBtn = document.getElementById('intro-enter');
+const mqReduceMotionIntro = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 let IW, IH, iParticles = [], iRaf;
 let iStarted = false;
 let iFinished = false;
+let introRevealMs = 50;
 
 function iResize() {
   IW = introCanvas.width  = window.innerWidth;
@@ -689,6 +722,18 @@ class IParticle {
 function iLoop() {
   ictx.clearRect(0, 0, IW, IH);
   iParticles.forEach(p => { p.update(); p.draw(ictx); });
+
+  if (iStarted && !iFinished && iParticles.length > 0 && iParticles.every(p => p.alpha <= 0)) {
+    introEl.style.transition = `opacity ${introRevealMs}ms ease-out`;
+    introEl.style.opacity = '0';
+    showEl.classList.add('visible');
+    setTimeout(() => {
+      introEl.remove();
+      iFinished = true;
+    }, introRevealMs + 24);
+    return;
+  }
+
   iRaf = requestAnimationFrame(iLoop);
 }
 
@@ -723,17 +768,7 @@ function triggerIntro() {
   // 文字淡出时，同时让粒子从透明逐步显现并在短延迟后开始散开
   iParticles.forEach(p => p.start(PARTICLE_FADE_IN_FRAMES, PARTICLE_DISPERSE_DELAY_FRAMES));
 
-  const poll = setInterval(() => {
-    if (iParticles.every(p => p.alpha <= 0)) {
-      clearInterval(poll);
-      cancelAnimationFrame(iRaf);
-      introEl.style.transition = 'opacity 0.05s ease';
-      introEl.style.opacity = '0';
-      showEl.classList.add('visible');
-      setTimeout(() => introEl.remove(), 50);
-      iFinished = true;
-    }
-  }, 80);
+  introRevealMs = mqReduceMotionIntro.matches ? 24 : 50;
 }
 
 if (introEnterBtn) {
@@ -749,20 +784,26 @@ setTimeout(startIntro, 250);
 /* ══════════════════════════════════════
    SLIDESHOW
 ══════════════════════════════════════ */
-const slides   = Array.from(document.querySelectorAll('.slide'));
-const N        = slides.length;
-const btnPrev  = document.getElementById('btn-prev');
-const btnNext  = document.getElementById('btn-next');
+const slides      = Array.from(document.querySelectorAll('.slide'));
+const N           = slides.length;
+const btnPrev     = document.getElementById('btn-prev');
+const btnNext     = document.getElementById('btn-next');
+const slidesStrip = document.getElementById('slides-strip');
 
 let cur = 0, busy = false;
 /** Simultaneous crossfade: outgoing 1→0, incoming 0→1; no motion on .slide. */
 const SLIDE_CROSSFADE_MS = 900;
 const SLIDE_EASE = 'ease-in-out';
 
+function setSlideTransition(el, value) {
+  el.style.transition = value;
+  el.style.webkitTransition = value;
+}
+
 function initSlideStack() {
   slides.forEach((el, i) => {
     el.style.transform = 'none';
-    el.style.transition = 'none';
+    setSlideTransition(el, 'none');
     el.style.opacity = i === 0 ? '1' : '0';
     el.style.zIndex = i === 0 ? '2' : '1';
   });
@@ -788,6 +829,8 @@ function updateUI() {
     cur === N - 1 ? 'all' : 'none';
 }
 
+const mqMobileSlideshow = window.matchMedia('(max-width: 640px)');
+
 function goTo(next) {
   if (busy || next === cur || next < 0 || next >= N) return;
   busy = true;
@@ -796,15 +839,18 @@ function goTo(next) {
   const elPrev = slides[prev];
   const elNext = slides[next];
   const tr = `opacity ${SLIDE_CROSSFADE_MS}ms ${SLIDE_EASE}`;
+  const stripFade =
+    mqMobileSlideshow.matches && !mqReduceMotionIntro.matches;
+  if (stripFade) slidesStrip.classList.add('slide-crossfading');
 
-  elNext.style.transition = 'none';
+  setSlideTransition(elNext, 'none');
   elNext.style.opacity = '0';
   elNext.style.zIndex = '3';
   elPrev.style.zIndex = '2';
   void elNext.offsetWidth;
 
-  elNext.style.transition = tr;
-  elPrev.style.transition = tr;
+  setSlideTransition(elNext, tr);
+  setSlideTransition(elPrev, tr);
   elNext.style.opacity = '1';
   elPrev.style.opacity = '0';
 
@@ -814,7 +860,7 @@ function goTo(next) {
   setTimeout(() => {
     slides.forEach((el, i) => {
       el.style.transform = 'none';
-      el.style.transition = '';
+      setSlideTransition(el, 'none');
       if (i === cur) {
         el.style.zIndex = '2';
         el.style.opacity = '1';
@@ -823,6 +869,7 @@ function goTo(next) {
         el.style.opacity = '0';
       }
     });
+    if (stripFade) slidesStrip.classList.remove('slide-crossfading');
     busy = false;
   }, SLIDE_CROSSFADE_MS + 50);
 }
@@ -834,7 +881,6 @@ window.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft')  goTo(cur - 1);
 });
 
-const slidesStrip = document.getElementById('slides-strip');
 let swipe0 = null;
 const SWIPE_MIN_PX = 42;
 
