@@ -288,11 +288,14 @@
       max-width: 100%;
       overflow-x: hidden;
       box-sizing: border-box;
-      /* Balanced insets so prompt + field read centered (not shifted up by bottom-only padding) */
-      padding-top: max(28px, env(safe-area-inset-top, 0px));
-      padding-bottom: max(104px, calc(92px + env(safe-area-inset-bottom, 0px)));
+      /* Symmetric vertical padding so prompt + input block sits in true viewport center */
+      --wall-vpad: max(100px, calc(88px + env(safe-area-inset-bottom, 0px)));
+      padding-top: max(var(--wall-vpad), env(safe-area-inset-top, 0px));
+      padding-bottom: var(--wall-vpad);
       padding-left: max(20px, env(safe-area-inset-left, 0px));
       padding-right: max(20px, env(safe-area-inset-right, 0px));
+      min-height: 100%;
+      min-height: 100dvh;
       justify-content: center;
       align-items: center;
     }
@@ -536,20 +539,20 @@
 
   /* After base .nav-btn — mobile only: bottom arrows + hint/count clear of thumbs */
   @media (max-width: 640px) {
-    /* Sit a bit higher from the home indicator so chevrons clear the comic’s lower edge */
+    /* Image slides: chevrons hug the bottom of the screen (still clears home indicator) */
     .nav-btn {
       top: auto;
-      bottom: max(22px, calc(16px + env(safe-area-inset-bottom, 0px)));
+      bottom: max(6px, calc(2px + env(safe-area-inset-bottom, 0px)));
       transform: none;
     }
     .nav-btn:active:not(:disabled) {
       transform: scale(0.96);
     }
     #swipe-hint {
-      bottom: max(118px, calc(104px + env(safe-area-inset-bottom, 0px)));
+      bottom: max(92px, calc(78px + env(safe-area-inset-bottom, 0px)));
     }
     #wall-count {
-      bottom: max(172px, calc(158px + env(safe-area-inset-bottom, 0px)));
+      bottom: max(148px, calc(134px + env(safe-area-inset-bottom, 0px)));
     }
   }
 </style>
