@@ -515,8 +515,72 @@
     letter-spacing: 0.18em;
     color: #bbb;
     text-align: center;
-    height: 16px;
+    min-height: 16px;
   }
+
+  #wall-manage {
+    margin-top: 14px;
+    width: 100%;
+    max-width: min(340px, 100%);
+    text-align: left;
+  }
+  #wall-manage summary {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: #bbb;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #wall-manage summary::-webkit-details-marker { display: none; }
+  #wall-manage[open] summary {
+    color: #999;
+    margin-bottom: 8px;
+  }
+  #wall-manage-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: min(38vh, 200px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+  #wall-manage-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    line-height: 1.35;
+    color: #555;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+  #wall-manage-list .wall-manage-text {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+  }
+  .wall-manage-remove {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: #FF3D5A;
+    opacity: 0.75;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wall-manage-remove:hover { opacity: 1; }
 
   #wall-count {
     position: absolute;
@@ -632,6 +696,10 @@
             <button id="wall-send">tell me</button>
           </div>
           <div id="wall-status"></div>
+          <details id="wall-manage">
+            <summary id="wall-manage-summary">remove from the background…</summary>
+            <ul id="wall-manage-list"></ul>
+          </details>
         </div>
 
         <div id="wall-count"></div>
@@ -1132,23 +1200,77 @@ function buildFloaters(msgs) {
   setWallCountDisplay(msgs.length);
 }
 
-// ── Storage via window.storage (Artifact persistent KV) ──
+// ── Storage: artifact KV when present + localStorage so dreams persist after reload everywhere ──
 const STORAGE_KEY = 'dream-wall-messages';
+const LS_KEY = 'dream-wall-messages-v1';
 
 async function loadMessages() {
   try {
-    const res = await window.storage.get(STORAGE_KEY, true); // shared=true
-    if (res && res.value) {
-      return JSON.parse(res.value);
+    const st = window.storage;
+    if (st && typeof st.get === 'function') {
+      const res = await st.get(STORAGE_KEY, true);
+      if (res && res.value) {
+        const parsed = JSON.parse(res.value);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    }
+  } catch(e) {}
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch(e) {}
   return [];
 }
 
 async function saveMessages(msgs) {
+  const json = JSON.stringify(msgs);
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(msgs), true); // shared=true
+    localStorage.setItem(LS_KEY, json);
   } catch(e) {}
+  try {
+    const st = window.storage;
+    if (st && typeof st.set === 'function') {
+      await st.set(STORAGE_KEY, json, true);
+    }
+  } catch(e) {}
+}
+
+const wallManageList = document.getElementById('wall-manage-list');
+
+function renderWallManageList() {
+  if (!wallManageList) return;
+  wallManageList.innerHTML = '';
+  if (!allMessages.length) {
+    const li = document.createElement('li');
+    li.style.border = 'none';
+    li.style.color = '#bbb';
+    li.style.fontSize = '9px';
+    li.textContent = 'Nothing saved yet — send one with tell me.';
+    wallManageList.appendChild(li);
+    return;
+  }
+  allMessages.forEach((text, i) => {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.className = 'wall-manage-text';
+    span.textContent = text;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'wall-manage-remove';
+    btn.textContent = 'remove';
+    btn.addEventListener('click', async () => {
+      allMessages.splice(i, 1);
+      await saveMessages(allMessages);
+      buildFloaters(allMessages);
+      setWallCountDisplay(allMessages.length);
+      renderWallManageList();
+    });
+    li.append(span, btn);
+    wallManageList.appendChild(li);
+  });
 }
 
 let allMessages = [];
@@ -1164,6 +1286,7 @@ async function initWall() {
   // load existing
   allMessages = await loadMessages();
   buildFloaters(allMessages);
+  renderWallManageList();
 
   // seed default floating dreams if empty
   if (allMessages.length === 0) {
@@ -1178,6 +1301,7 @@ async function initWall() {
     allMessages = seeds;
     await saveMessages(allMessages);
     buildFloaters(allMessages);
+    renderWallManageList();
   }
 }
 
@@ -1201,6 +1325,7 @@ async function submitDream() {
 
   wallInput.value = '';
   wallStatus.textContent = 'released ✦';
+  renderWallManageList();
   setTimeout(() => {
     wallStatus.textContent = '';
     wallSend.disabled = false;
